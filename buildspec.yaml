@@ -1,0 +1,41 @@
+version: 0.2
+
+env:
+  variables:
+    SONAR_PROJECT_KEY: "devsecops-demo"
+    SONAR_HOST_URL: "http://<your-sonarqube-host>:9000"
+    SONAR_TOKEN: "<your-sonarqube-token>"
+    ECR_URL: "512672395252.dkr.ecr.us-east-1.amazonaws.com/devsecops-demo"
+
+phases:
+  install:
+    runtime-versions:
+      nodejs: 16
+      docker: 20
+    commands:
+      - echo Installing SonarScanner...
+      - wget https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-4.7.0.2747-linux.zip
+      - unzip sonar-scanner-cli-*.zip
+      - export PATH=$PATH:$(pwd)/sonar-scanner-*/bin
+      - echo Installing Trivy...
+      - curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh -s -- -b /usr/local/bin
+  pre_build:
+    commands:
+      - sonar-scanner \
+          -Dsonar.projectKey=$SONAR_PROJECT_KEY \
+          -Dsonar.sources=. \
+          -Dsonar.host.url=$SONAR_HOST_URL \
+          -Dsonar.login=$SONAR_TOKEN
+  build:
+    commands:
+      - docker build -t devsecops-demo .
+      - docker tag devsecops-demo:latest $ECR_URL:latest
+  post_build:
+    commands:
+      - trivy image --exit-code 1 --severity HIGH,CRITICAL $ECR_URL:latest || exit 1
+      - aws ecr get-login-password | docker login --username AWS --password-stdin $ECR_URL
+      - docker push $ECR_URL:latest
+
+artifacts:
+  files:
+    - '**/*'
