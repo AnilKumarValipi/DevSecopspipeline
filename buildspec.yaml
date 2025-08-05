@@ -2,9 +2,9 @@ version: 0.2
 
 env:
   variables:
-    SONAR_PROJECT_KEY: "devsecops-demo"
-    SONAR_HOST_URL: "http://<your-sonarqube-host>:9000"
-    SONAR_TOKEN: "<your-sonarqube-token>"
+    SONAR_PROJECT_KEY: "devsecops-token"
+    SONAR_HOST_URL: "http://localhost:9000"
+    SONAR_TOKEN: "squ_2aa358067f978b7b2ca1abc16b27e3c60944c3db"
     ECR_URL: "512672395252.dkr.ecr.us-east-1.amazonaws.com/devsecops-demo"
 
 phases:
